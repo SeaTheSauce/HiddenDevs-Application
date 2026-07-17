@@ -189,7 +189,8 @@ local function onDashAction(actionName, inputState, inputObject)
 	if UIS:IsKeyDown(Enum.KeyCode.A) then inputRight -= 1 end
 
 	local dashKind, localDashDir
-	if inputForward ~= 0 or inputRight ~= 0 then
+	if (inputForward ~= 0 or inputRight ~= 0) and UIS.MouseBehavior == Enum.MouseBehavior.LockCenter then 
+    -- only works with shiftlock, otherwise there will be weird behaviour like the player backdashing when walking forward with S
 		if math.abs(inputForward) >= math.abs(inputRight) then 
 			-- ^ check if the absolute value (so that negative/backwards inputs are turned positive) of the forward input is higher than the right input
 			if inputForward > 0 then -- and then check if it's a forward dash
@@ -208,7 +209,7 @@ local function onDashAction(actionName, inputState, inputObject)
 				localDashDir = Vector3.new(-1, 0, 0)
 			end
 		end
-	else -- fallback in case input variables are 0
+	else -- fallback in case input variables are 0 or if player is not shiftlocked
 		local rawMoveDir = hum.MoveDirection
 		local moveDir = Vector3.new(rawMoveDir.X, 0, rawMoveDir.Z) -- flatten the vectors to the XZ plane again
 		local dashUnit = moveDir.Magnitude > 0.05 and moveDir.Unit or rootLook 
