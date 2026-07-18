@@ -1,5 +1,5 @@
 --[[ Connected Discord-GitHub; Roblox: SeaTheSauce; Discord: seaxz
-Dash - LocalScript in StarterPlayerScripts
+Its a LocalScript in StarterPlayerScripts
 Features:
 - Directional
 - Client sided for responsiveness
