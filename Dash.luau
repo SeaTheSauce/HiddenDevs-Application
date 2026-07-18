@@ -1,5 +1,5 @@
 --[[ Connected Discord-GitHub; Roblox: SeaTheSauce; Discord: seaxz
-Its a LocalScript in StarterPlayerScripts
+It's a LocalScript in StarterPlayerScripts
 Features:
 - Directional
 - Client sided for responsiveness
@@ -342,7 +342,7 @@ local function onDashAction(actionName, inputState, inputObject)
 		if newDir.Magnitude > 0 then currentDir = newDir.Unit end -- update the current direction if it's valid
 
 		lv.VectorVelocity = currentDir * (dashSpeed * ease) -- update the velocity and apply the easing to the speed
-		-- now we have directional dashing that works with both shift lock movement and WASD/joystick movement
+		-- now we have dynamic rotation that works with both shift lock movement and WASD/joystick movement
 	end)
 end
 
