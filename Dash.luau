@@ -14,9 +14,7 @@ Features:
 local UIS = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
-
 local player = game.Players.LocalPlayer
-local CAS = game:GetService("ContextActionService") -- superior cuz you can set binds to all devices compared to uis
 
 -- Set up the variables
 local frontCooldown = false
@@ -34,10 +32,10 @@ local function setupCharacter(newCharacter) -- this is needed to prevent outdate
 	char = newCharacter
 	hrp = char:WaitForChild("HumanoidRootPart")
 	hum = char:WaitForChild("Humanoid")
-	
+
 	animator = char:WaitForChild("Humanoid"):FindFirstChildOfClass("Animator") or Instance.new("Animator", hum)
 	animator.Parent = hum
-	
+
 	anims = {}
 	local animObjects = {"Front", "Back", "Left", "Right"}
 
@@ -48,7 +46,7 @@ local function setupCharacter(newCharacter) -- this is needed to prevent outdate
 		track.Looped = false -- make sure it's not looped
 		track.Priority = Enum.AnimationPriority.Action4 -- prioritise it
 	end
-	
+
 	-- reset cooldowns
 	frontCooldown = false
 	sidebackCooldown = false
@@ -128,7 +126,7 @@ local function handleVFX(char)
 					local smoke = game.ReplicatedStorage.VFX.DashSmoke:Clone()
 					smoke.CFrame = CFrame.new(foot.Position - Vector3.new(0, foot.Size.Y / 2, 0)) -- teleport it under the foot
 					smoke.Parent = workspace -- add it to real space
-					
+
 					local color = nil
 					local params = RaycastParams.new() -- raycast to find the floor
 					params.FilterDescendantsInstances = {char} -- add the player's character to the filter
@@ -160,8 +158,7 @@ local function handleVFX(char)
 	end)
 end
 
-local function onDashAction(actionName, inputState, inputObject)
-	if inputState ~= Enum.UserInputState.Begin then return end -- ignores input if its not a press
+local function onDashAction()
 	if not player then return end
 	if not (hrp and hum) then return end -- make sure the player is still alive and that the character is updated
 	if dashInProgress then return end -- prevents double dashing
@@ -169,7 +166,7 @@ local function onDashAction(actionName, inputState, inputObject)
 	-- ^initial cooldown check if neither cooldowns are ready
 
 	dashInProgress = true
-	
+
 	local rootLook = Vector3.new(hrp.CFrame.LookVector.X, 0, hrp.CFrame.LookVector.Z) -- we get the look vector of the hrp cframe and set the Y level to 0
 	local rootRight = Vector3.new(hrp.CFrame.RightVector.X, 0, hrp.CFrame.RightVector.Z) -- ^ same as here but with the right vector
 	if rootLook.Magnitude <= 0.001 or rootRight.Magnitude <= 0.001 then 
@@ -177,7 +174,7 @@ local function onDashAction(actionName, inputState, inputObject)
 		dashInProgress = false
 		return 
 	end 
-	
+
 	rootLook = rootLook.Unit -- simplify to only the unit since the vertical checks are over and we need this later
 	rootRight = rootRight.Unit -- ^
 
@@ -190,7 +187,7 @@ local function onDashAction(actionName, inputState, inputObject)
 
 	local dashKind, localDashDir
 	if (inputForward ~= 0 or inputRight ~= 0) and UIS.MouseBehavior == Enum.MouseBehavior.LockCenter then 
-    -- only works with shiftlock, otherwise there will be weird behaviour like the player backdashing when walking forward with S
+		-- only works with shiftlock, otherwise there will be weird behaviour like the player backdashing when walking forward with S
 		if math.abs(inputForward) >= math.abs(inputRight) then 
 			-- ^ check if the absolute value (so that negative/backwards inputs are turned positive) of the forward input is higher than the right input
 			if inputForward > 0 then -- and then check if it's a forward dash
@@ -240,7 +237,7 @@ local function onDashAction(actionName, inputState, inputObject)
 	local isFrontDash = dashKind == "Front" 
 	local dashTime = isFrontDash and frontTime or sidebackTime    -- Make front dashes stronger
 	local dashSpeed = isFrontDash and frontSpeed or sidebackSpeed -- ^
-	
+
 	--
 	if isFrontDash and frontCooldown then -- checks the specific cooldown and returns if it's still on cooldown
 		dashInProgress = false
@@ -275,7 +272,7 @@ local function onDashAction(actionName, inputState, inputObject)
 		hum.JumpPower = 50 -- restore it
 		hum.JumpHeight = 7.2 -- ^
 	end)
-	
+
 	anims[dashKind]:Play() -- now we play an animation based on the player's dash direction
 
 	local attachment = Instance.new("Attachment", hrp) -- now we make an attachment
@@ -313,7 +310,7 @@ local function onDashAction(actionName, inputState, inputObject)
 			if attachment then attachment:Destroy() end
 			return
 		end
-		
+
 		local elapsed = tick() - startTime -- timer
 		local t = math.clamp(elapsed / dashTime, 0, 1) -- time as a 0 to 1 ratio
 
@@ -328,7 +325,7 @@ local function onDashAction(actionName, inputState, inputObject)
 
 		local currentForce = 100000 * ease -- apply the easing to the force
 		lv.MaxAxesForce = Vector3.new(currentForce, 0, currentForce) -- we only need to apply force to X and Z, Y is ignored
-		
+
 		-- this is the best part: now we rotate the dash direction to match the character's rotation, this makes the dash directional and cool
 		local currentYaw = getCharacterYaw() -- get the current yaw
 		local deltaYaw = currentYaw - lastYaw -- we calculate the difference in yaws
@@ -346,13 +343,8 @@ local function onDashAction(actionName, inputState, inputObject)
 	end)
 end
 
-CAS:BindAction("Dash", onDashAction, true, Enum.KeyCode.Q, Enum.KeyCode.ButtonX) 
--- ^ now we bind the action to the dash function, create a button for mobile, and set the keys to Q on PC and to X on console
-
-local dashButton = CAS:GetButton("Dash") -- create the button for mobile
-if dashButton then
-	dashButton.Size = UDim2.new(0, 60, 0, 60)
-	dashButton.Position = UDim2.new(1, -220, 0, -100)
-end
-
-CAS:SetTitle("Dash", "DASH") -- set the text
+local action = ReplicatedStorage.Inputs:WaitForChild("MovementContext").Dash -- Set up the keybinds
+action.Pressed:Connect(onDashAction) -- man I love input action system its so easy
+-- KBM: Q
+-- GamePad: ButtonB
+-- Touch: Button
